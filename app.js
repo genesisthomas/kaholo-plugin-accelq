@@ -1,25 +1,23 @@
 const { bootstrap } = require("@kaholo/plugin-library");
+const { exec } = require("./helpers");
 
-async function hello(params) {
-  const {
-    helloName,
-    saySecret,
-    secret,
-  } = params;
 
-  let greeting = `Hello ${helloName}!`;
+async function execute(params) {
+  const { releaseUrl, url, userID, apiKey, tenantCode, jobID, optionalParameters } = params;
+  const parameters = `--url "${url}" --userID "${userID}" --apiKey "${apiKey}" --tenantCode "${tenantCode}" --jobID "${jobID}" ${optionalParameters}`;
+  const commands =
+    `curl ${releaseUrl} -O -s 
+    tar xvzf accelq_ci_cd.tar.gz
+    cd out
+    npm install
+    node app.js ${parameters}`;
 
-  if (saySecret && !secret) {
-    throw new Error("No secret was provided to say. Please provide a secret or uncheck \"Say Secret\".");
-  }
-
-  if (saySecret) {
-    greeting += `\nHere is the secret: ${secret}`;
-  }
-
-  return greeting;
+  return exec(commands, {
+  }).catch((error) => {
+    throw new Error(error.stderr || error.stdout || error.message || error);
+  });
 }
 
 module.exports = bootstrap({
-  hello,
+  execute,
 });
